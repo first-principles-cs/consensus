@@ -6,8 +6,24 @@
 #include "raft.h"
 #include "timer.h"
 #include "log.h"
+#include "rpc.h"
 #include <stdlib.h>
 #include <string.h>
+
+/* Forward declarations - implemented in replication.c (Phase 3+) */
+__attribute__((weak)) raft_status_t raft_handle_append_entries_response(
+    raft_node_t* node, int32_t from_node,
+    const raft_append_entries_response_t* response) {
+    (void)node; (void)from_node; (void)response;
+    return RAFT_OK;
+}
+
+__attribute__((weak)) raft_status_t raft_handle_append_entries_with_log(
+    raft_node_t* node, const void* msg, size_t msg_len,
+    raft_append_entries_response_t* response) {
+    (void)node; (void)msg; (void)msg_len; (void)response;
+    return RAFT_OK;
+}
 
 void raft_step_down(raft_node_t* node, uint64_t new_term) {
     if (!node) return;
@@ -252,9 +268,17 @@ raft_status_t raft_receive_message(raft_node_t* node, int32_t from_node,
 
         case RAFT_MSG_APPEND_ENTRIES: {
             if (msg_len < sizeof(raft_append_entries_t)) return RAFT_INVALID_ARG;
+            const raft_append_entries_t* ae = (const raft_append_entries_t*)msg;
             raft_append_entries_response_t response;
-            raft_status_t status = raft_handle_append_entries(node,
-                (const raft_append_entries_t*)msg, &response);
+            raft_status_t status;
+
+            /* Use replication handler if there are entries */
+            if (ae->entries_count > 0) {
+                status = raft_handle_append_entries_with_log(node, msg, msg_len, &response);
+            } else {
+                status = raft_handle_append_entries(node, ae, &response);
+            }
+
             if (status == RAFT_OK && node->send_fn) {
                 node->send_fn(node, from_node, &response, sizeof(response),
                               node->user_data);
@@ -263,8 +287,9 @@ raft_status_t raft_receive_message(raft_node_t* node, int32_t from_node,
         }
 
         case RAFT_MSG_APPEND_ENTRIES_RESPONSE: {
-            /* Will be handled in Phase 3 (replication) */
-            return RAFT_OK;
+            if (msg_len < sizeof(raft_append_entries_response_t)) return RAFT_INVALID_ARG;
+            return raft_handle_append_entries_response(node, from_node,
+                (const raft_append_entries_response_t*)msg);
         }
 
         default:

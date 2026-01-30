@@ -6,6 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Forward declaration - implemented in replication.c (Phase 3+) */
+__attribute__((weak)) raft_status_t raft_replicate_log(raft_node_t* node) {
+    (void)node;
+    return RAFT_OK;
+}
+
 raft_node_t* raft_create(const raft_config_t* config) {
     if (!config || config->node_id < 0 || config->num_nodes < 1) {
         return NULL;
@@ -102,6 +108,9 @@ raft_status_t raft_propose(raft_node_t* node, const char* command,
     /* For single-node cluster, entry is committed immediately */
     if (node->num_nodes == 1) {
         node->volatile_state.commit_index = index;
+    } else {
+        /* Trigger replication to followers */
+        raft_replicate_log(node);
     }
 
     return RAFT_OK;

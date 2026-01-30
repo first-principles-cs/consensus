@@ -10,7 +10,7 @@ Raft is a consensus algorithm designed to be easy to understand. It provides the
 
 **Phase 1**: ✅ Complete - Basic structures and single-node operation
 **Phase 2**: ✅ Complete - Leader election
-**Phase 3**: 📋 Planned - Log replication
+**Phase 3**: ✅ Complete - Log replication
 **Phase 4**: 📋 Planned - Persistence and recovery
 **Phase 5**: 📋 Planned - Membership changes and optimization
 
@@ -19,6 +19,7 @@ Raft is a consensus algorithm designed to be easy to understand. It provides the
 ```bash
 make test_phase1   # Build and run Phase 1 tests
 make test_phase2   # Build and run Phase 2 tests
+make test_phase3   # Build and run Phase 3 tests
 make clean         # Clean build artifacts
 ```
 
@@ -27,17 +28,20 @@ make clean         # Clean build artifacts
 ```
 consensus/
 ├── src/
-│   ├── types.h        # Status codes and type definitions
-│   ├── param.h        # Tunable parameters
-│   ├── log.h/c        # Raft log management
-│   ├── raft.h/c       # Core Raft node
-│   ├── rpc.h          # RPC message structures
-│   ├── election.h/c   # Leader election logic
-│   └── timer.h/c      # Timer management
+│   ├── types.h          # Status codes and type definitions
+│   ├── param.h          # Tunable parameters
+│   ├── log.h/c          # Raft log management
+│   ├── raft.h/c         # Core Raft node
+│   ├── rpc.h            # RPC message structures
+│   ├── election.h/c     # Leader election logic
+│   ├── timer.h/c        # Timer management
+│   ├── replication.h/c  # Log replication logic
+│   └── commit.h/c       # Commit index management
 ├── tests/
 │   └── unit/
 │       ├── test_phase1.c  # Phase 1 tests (10 tests)
-│       └── test_phase2.c  # Phase 2 tests (10 tests)
+│       ├── test_phase2.c  # Phase 2 tests (10 tests)
+│       └── test_phase3.c  # Phase 3 tests (10 tests)
 └── docs/              # Documentation
 ```
 
@@ -78,12 +82,27 @@ consensus/
    - Heartbeat timer tick
    - Timer reset
 
+### Phase 3: Log Replication (10 tests)
+
+1. **Replication Logic (replication.c)** - 230 lines
+   - Replicate log entries to peers
+   - Handle AppendEntries with log entries
+   - Log consistency check (prev_log_index/prev_log_term)
+   - Handle AppendEntries response
+   - Decrement next_index on mismatch
+
+2. **Commit Management (commit.c)** - 90 lines
+   - Advance commit index based on majority
+   - Only commit entries from current term
+   - Calculate majority match index
+
 ## Test Results
 
 ```
 Phase 1: 10/10 tests passed
 Phase 2: 10/10 tests passed
-Total: 20/20 tests passed
+Phase 3: 10/10 tests passed
+Total: 30/30 tests passed
 ```
 
 ## Key Invariants
@@ -98,14 +117,14 @@ Total: 20/20 tests passed
 ```bash
 git clone https://github.com/first-principles-cs/consensus.git
 cd consensus
-make test_phase2
-./test_phase2
+make test_phase3
+./test_phase3
 ```
 
 ## Phases
 
 - **Phase 1**: Basic structures and single-node operation ✅
 - **Phase 2**: Leader election ✅
-- **Phase 3**: Log replication
+- **Phase 3**: Log replication ✅
 - **Phase 4**: Persistence and recovery
 - **Phase 5**: Membership changes and optimization

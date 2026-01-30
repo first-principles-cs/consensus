@@ -9,6 +9,12 @@
 #include <stdlib.h>
 #include <time.h>
 
+/* Forward declaration - implemented in replication.c (Phase 3+) */
+__attribute__((weak)) raft_status_t raft_replicate_log(raft_node_t* node) {
+    /* Fall back to heartbeats if replication not available */
+    return raft_send_heartbeats(node);
+}
+
 static uint32_t timer_seed_value = 0;
 static bool seed_initialized = false;
 
@@ -56,7 +62,7 @@ raft_status_t raft_tick_heartbeat(raft_node_t* node, uint64_t elapsed_ms) {
 
     if (node->heartbeat_timer_ms >= RAFT_HEARTBEAT_INTERVAL_MS) {
         node->heartbeat_timer_ms = 0;
-        return raft_send_heartbeats(node);
+        return raft_replicate_log(node);
     }
 
     return RAFT_OK;

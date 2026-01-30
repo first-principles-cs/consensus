@@ -40,6 +40,10 @@ test_phase1: $(PHASE1_OBJS) tests/unit/test_phase1.c
 test_phase2: $(PHASE2_OBJS) tests/unit/test_phase2.c
 	$(CC) $(CFLAGS) -o $@ tests/unit/test_phase2.c $(PHASE2_OBJS) $(LDFLAGS)
 
+# Phase 3 test
+test_phase3: $(PHASE3_OBJS) tests/unit/test_phase3.c
+	$(CC) $(CFLAGS) -o $@ tests/unit/test_phase3.c $(PHASE3_OBJS) $(LDFLAGS)
+
 test: test_phase1
 	./test_phase1
 
