@@ -1,0 +1,23 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+
+# Test executables (in root directory only)
+/test_phase*
+/raft-bench
+
+# Debug symbols
+*.dSYM/
+
+# Test data
+/tmp/raft_test_*
+consensus_data/
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
