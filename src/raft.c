@@ -6,9 +6,26 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Forward declaration - implemented in replication.c (Phase 3+) */
+/* Forward declarations - implemented in other modules (Phase 3+, Phase 4+) */
 __attribute__((weak)) raft_status_t raft_replicate_log(raft_node_t* node) {
     (void)node;
+    return RAFT_OK;
+}
+
+/* Storage functions - weak symbols for Phase 4+ */
+__attribute__((weak)) raft_storage_t* raft_storage_open(const char* data_dir, bool sync_writes) {
+    (void)data_dir; (void)sync_writes;
+    return NULL;
+}
+
+__attribute__((weak)) void raft_storage_close(raft_storage_t* storage) {
+    (void)storage;
+}
+
+__attribute__((weak)) raft_status_t raft_recover(raft_node_t* node,
+                                                  raft_storage_t* storage,
+                                                  void* result) {
+    (void)node; (void)storage; (void)result;
     return RAFT_OK;
 }
 
@@ -59,12 +76,34 @@ raft_node_t* raft_create(const raft_config_t* config) {
     node->election_timer_ms = 0;
     node->heartbeat_timer_ms = 0;
 
+    /* Persistence (Phase 4+) */
+    node->storage = NULL;
+    node->data_dir = NULL;
+
+    if (config->data_dir) {
+        node->data_dir = strdup(config->data_dir);
+        if (!node->data_dir) {
+            free(node->votes_granted);
+            raft_log_destroy(node->log);
+            free(node);
+            return NULL;
+        }
+
+        node->storage = raft_storage_open(config->data_dir, true);
+        if (node->storage) {
+            /* Recover state from storage */
+            raft_recover(node, node->storage, NULL);
+        }
+    }
+
     return node;
 }
 
 void raft_destroy(raft_node_t* node) {
     if (!node) return;
 
+    raft_storage_close(node->storage);
+    free(node->data_dir);
     raft_log_destroy(node->log);
     free(node->leader_state.next_index);
     free(node->leader_state.match_index);

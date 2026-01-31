@@ -93,6 +93,7 @@ struct raft_config {
     raft_apply_fn apply_fn;   /* State machine apply callback */
     raft_send_fn send_fn;     /* RPC send callback */
     void* user_data;          /* User data passed to callbacks */
+    const char* data_dir;     /* Data directory for persistence (NULL = no persistence) */
 };
 
 #endif /* RAFT_TYPES_H */

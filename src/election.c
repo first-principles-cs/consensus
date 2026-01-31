@@ -25,6 +25,23 @@ __attribute__((weak)) raft_status_t raft_handle_append_entries_with_log(
     return RAFT_OK;
 }
 
+/* Forward declaration - implemented in storage.c (Phase 4+) */
+__attribute__((weak)) raft_status_t raft_storage_save_state(void* storage,
+                                                             uint64_t current_term,
+                                                             int32_t voted_for) {
+    (void)storage; (void)current_term; (void)voted_for;
+    return RAFT_OK;
+}
+
+/* Helper to persist state if storage is enabled */
+static void persist_state(raft_node_t* node) {
+    if (node->storage) {
+        raft_storage_save_state(node->storage,
+                                 node->persistent.current_term,
+                                 node->persistent.voted_for);
+    }
+}
+
 void raft_step_down(raft_node_t* node, uint64_t new_term) {
     if (!node) return;
 
@@ -38,6 +55,9 @@ void raft_step_down(raft_node_t* node, uint64_t new_term) {
     if (node->votes_granted) {
         memset(node->votes_granted, 0, node->num_nodes * sizeof(bool));
     }
+
+    /* Persist state change */
+    persist_state(node);
 
     raft_reset_election_timer(node);
 }
@@ -64,6 +84,9 @@ raft_status_t raft_start_election(raft_node_t* node) {
     node->persistent.current_term++;
     node->persistent.voted_for = node->node_id;
     node->current_leader = -1;
+
+    /* Persist state change before sending RPCs */
+    persist_state(node);
 
     /* Reset election state */
     node->votes_received = 1;  /* Vote for self */
@@ -127,6 +150,8 @@ raft_status_t raft_handle_request_vote(raft_node_t* node,
 
     if (can_vote && log_ok) {
         node->persistent.voted_for = request->candidate_id;
+        /* Persist vote before responding */
+        persist_state(node);
         response->vote_granted = true;
         raft_reset_election_timer(node);
     }

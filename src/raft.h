@@ -10,6 +10,9 @@
 #include "types.h"
 #include "log.h"
 
+/* Forward declaration for storage */
+typedef struct raft_storage raft_storage_t;
+
 /**
  * Raft node structure
  */
@@ -50,6 +53,10 @@ struct raft_node {
     uint64_t election_timeout_ms;   /* Current election timeout */
     uint64_t election_timer_ms;     /* Time since last election reset */
     uint64_t heartbeat_timer_ms;    /* Time since last heartbeat (leader only) */
+
+    /* Persistence (Phase 4+) */
+    raft_storage_t* storage;    /* Persistent storage (NULL if not enabled) */
+    char* data_dir;             /* Data directory path */
 };
 
 /**

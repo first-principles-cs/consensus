@@ -16,8 +16,8 @@ PHASE2_OBJS = $(PHASE2_SRCS:.c=.o)
 PHASE3_SRCS = $(PHASE2_SRCS) src/replication.c src/commit.c
 PHASE3_OBJS = $(PHASE3_SRCS:.c=.o)
 
-# Phase 4 sources (adds storage, snapshot, recovery)
-PHASE4_SRCS = $(PHASE3_SRCS) src/storage.c src/snapshot.c src/recovery.c
+# Phase 4 sources (adds crc32, storage, snapshot, recovery)
+PHASE4_SRCS = $(PHASE3_SRCS) src/crc32.c src/storage.c src/snapshot.c src/recovery.c
 PHASE4_OBJS = $(PHASE4_SRCS:.c=.o)
 
 # Phase 5 sources (adds membership, batch)
@@ -43,6 +43,10 @@ test_phase2: $(PHASE2_OBJS) tests/unit/test_phase2.c
 # Phase 3 test
 test_phase3: $(PHASE3_OBJS) tests/unit/test_phase3.c
 	$(CC) $(CFLAGS) -o $@ tests/unit/test_phase3.c $(PHASE3_OBJS) $(LDFLAGS)
+
+# Phase 4 test
+test_phase4: $(PHASE4_OBJS) tests/unit/test_phase4.c
+	$(CC) $(CFLAGS) -o $@ tests/unit/test_phase4.c $(PHASE4_OBJS) $(LDFLAGS)
 
 test: test_phase1
 	./test_phase1
