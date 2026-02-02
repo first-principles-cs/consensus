@@ -32,16 +32,27 @@ typedef enum {
     RAFT_FOLLOWER = 0,
     RAFT_CANDIDATE = 1,
     RAFT_LEADER = 2,
+    RAFT_PRE_CANDIDATE = 3,     /* PreVote phase (Phase 6) */
 } raft_role_t;
+
+/**
+ * Log entry type
+ */
+typedef enum {
+    RAFT_ENTRY_COMMAND = 0,     /* Normal command */
+    RAFT_ENTRY_CONFIG = 1,      /* Configuration change */
+    RAFT_ENTRY_NOOP = 2,        /* No-op (new leader commit) */
+} raft_entry_type_t;
 
 /**
  * Log entry
  */
 typedef struct raft_entry {
-    uint64_t term;        /* Term when entry was received */
-    uint64_t index;       /* Log index (1-based) */
-    char* command;        /* Command data */
-    size_t command_len;   /* Length of command data */
+    uint64_t term;            /* Term when entry was received */
+    uint64_t index;           /* Log index (1-based) */
+    raft_entry_type_t type;   /* Entry type */
+    char* command;            /* Command data */
+    size_t command_len;       /* Length of command data */
 } raft_entry_t;
 
 /**

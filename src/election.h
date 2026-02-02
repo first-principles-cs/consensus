@@ -17,6 +17,26 @@
 raft_status_t raft_start_election(raft_node_t* node);
 
 /**
+ * Start a pre-vote phase (Phase 6)
+ * Checks if we would win an election before incrementing term
+ */
+raft_status_t raft_start_pre_vote(raft_node_t* node);
+
+/**
+ * Handle incoming PreVote RPC (Phase 6)
+ */
+raft_status_t raft_handle_pre_vote(raft_node_t* node,
+                                    const raft_pre_vote_t* request,
+                                    raft_pre_vote_response_t* response);
+
+/**
+ * Handle PreVote response (Phase 6)
+ */
+raft_status_t raft_handle_pre_vote_response(raft_node_t* node,
+                                             int32_t from_node,
+                                             const raft_pre_vote_response_t* response);
+
+/**
  * Handle incoming RequestVote RPC
  */
 raft_status_t raft_handle_request_vote(raft_node_t* node,
@@ -36,6 +56,12 @@ raft_status_t raft_handle_request_vote_response(raft_node_t* node,
 raft_status_t raft_handle_append_entries(raft_node_t* node,
                                           const raft_append_entries_t* request,
                                           raft_append_entries_response_t* response);
+
+/**
+ * Handle TimeoutNow RPC (Phase 6 - leadership transfer)
+ */
+raft_status_t raft_handle_timeout_now(raft_node_t* node,
+                                       const raft_timeout_now_t* request);
 
 /**
  * Step down to follower state with new term

@@ -26,4 +26,10 @@
 /* Maximum command size in bytes */
 #define RAFT_MAX_COMMAND_SIZE         (1024 * 1024)
 
+/* PreVote enabled by default (Phase 6) */
+#define RAFT_PREVOTE_ENABLED          1
+
+/* Auto compaction threshold (entries since last snapshot) */
+#define RAFT_AUTO_COMPACTION_THRESHOLD 1000
+
 #endif /* RAFT_PARAM_H */
